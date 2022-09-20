@@ -15,24 +15,24 @@
 
 This is a project for the exam of **Serverless Computing for IoT**.<br>
 
-Forest fire is one of the world's biggest calamities that produce significant damage to the atmosphere and also the injunction of danger environment.
-Internet of things and drone technology are fested booming sectors, that evolves rapidly. This advanced technology can prevent such kind of incident and also making fast decision without the intervention of the humans.
-The proposed service oriented architecture involves a series of communication between devices and distribute in real-time all the data to the Ground Station. The adoption of all this intelligent devices, with communication capability enable a new concept called **_Internet of Forest Things_**.
+Forest fire is one of the world's biggest calamities that produce significant damage to the atmosphere and also the injunction of danger environment.<br>
+Internet of things and drone technology are fested booming sectors, that evolves rapidly. This advanced technology can prevent such kind of incident and also making fast decision without the intervention of the humans.<br>
+The proposed service oriented architecture involves a series of communication between devices and distribute in real-time all the data to the Ground Station. The adoption of all this intelligent devices, with communication capability enable a new concept called **_Internet of Forest Things_**.<br><br>
 The architecture implements sensors which are installed on the tree that detects the presents of fire and immediately sents the right coordinate to the Unmanned Air Vehicles (UAVs). The UAV immediately takeoff and fly over the forest, reached the flame spot, the UAV releases the fire balls extinguisher and than return to launch position.
 
 ## Architecture
 
 ![Architecture](Images/architecture.png)
 
-From the architecture, in the block "Iot Forest Sensors" we have three types of sending fire alarm, on the top we have the HW prototype made with an ESP32 microcontroller properly connected to a flame detector sensor, led/buzeer and an LCD screen. Initially to speed up development, the flame alarm was simulated by two different nodes, one through a **sendfirealarm** function created through the Nuclio Framework and the other through the Node-RED framework. Both simulated and real sensors use the MQTT protocol to publish their status.
-When the sensor detects a flame sends a notification in the RabbitMQ queue `forest/iot/fire`, the **foresthandler** function through a trigger reads all messages sent on the previous topic and when the flame alert condition occurs, the function publish an alert message on the topic `forest/iot/alert`, then two events arise:
+From the architecture, in the block "Iot Forest Sensors" we have three types of sending fire alarm, on the top we have the HW prototype made with an ESP32 microcontroller properly connected to a flame detector sensor, led/buzeer and an LCD screen.<br>
+Initially to speed up development, the flame alarm was simulated by two different nodes, one through a **sendfirealarm** function created through the Nuclio Framework and the other through the Node-RED framework. Both simulated and real sensors use the MQTT protocol to publish their status.<br>
+When the sensor detects a flame sends a notification in the RabbitMQ queue `forest/iot/fire`, the **foresthandler** function through a trigger reads all messages sent on the previous topic and when the flame alert condition occurs, the function publish an alert message on the topic `forest/iot/alert`, then two events arise:<br>
 
-**1.** HTTP request to **IFTTT Webhook**, configured to to send an alert messages and flame coordinates to a telegram bot.
+**1.** HTTP request to **IFTTT Webhook**, configured to to send an alert messages and flame coordinates to a telegram bot.<br>
 **2.** Activation of the alert status in the **Forest Dashboard**, publish the flame coordinates to the connected UAV unit that is subscribed to the topic.
 
-The unit received the coordinates, initializes the flight parameters, loads the flight mission, arms the engines and start the mission. The unit in flight continues to publish on the topic `drone/sensor` the parameters necessary for geolocation and also the status of the drone.
-
-The drone reached the fire spot drops the fire ball extinguisher and publish on the topic `forest/drone/released` the actual release, then sets his status to return to launch position, at the same time the nuclio function **dronehandler** is triggered, so a new messase is sent to update the flame status alarm.
+The unit received the coordinates, initializes the flight parameters, loads the flight mission, arms the engines and start the mission. The unit in flight continues to publish on the topic `drone/sensor` the parameters necessary for geolocation and also the status of the drone.<br>
+The drone reached the fire spot drops the fire ball extinguisher and publish on the topic `forest/drone/released` the actual release, then sets his status to return to launch position, at the same time the nuclio function **dronehandler** is triggered, so a new messase is sent to update the flame status alarm.<br>
 
 ## Project Structure
 
