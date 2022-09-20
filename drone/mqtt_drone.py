@@ -1,20 +1,16 @@
-from ast import Global
+# from ast import Global
 import asyncio
 from contextlib import AsyncExitStack, asynccontextmanager
-from email import message
-from http import client
-from random import randrange
+# from email import message
+# from http import client
+# from random import randrange
+# from turtle import clear
 from asyncio_mqtt import Client, MqttError
 from mavsdk import System
-from mavsdk import mission
+# from mavsdk import mission
 from mavsdk.mission import (MissionItem, MissionPlan)
+# from mavsdk.offboard import (OffboardError, VelocityBodyYawspeed)
 import json
-import droneGoTo
-
-mqttHostname  = "192.168.1.184"
-mqttPort = 1883
-mqttUsername = "guest"
-mqttPassword = "guest"
 
 async def run():
 
@@ -24,9 +20,10 @@ async def run():
     print("Waiting for drone to connect...")
     async for state in drone.core.connection_state():
         if state.is_connected:
+            isConnected = "Connected"
             print(f"-- Connected to drone!")
             async with Client(hostname = mqttHostname, port = mqttPort,username = mqttUsername, password = mqttPassword) as client:
-                await client.publish("drone", "Connected", qos=1)
+                await client.publish("drone/sensors", isConnected, qos=1)
                 break
 
     # We 💛 context managers. Let's create a stack to help
@@ -53,26 +50,23 @@ async def run():
             task = asyncio.create_task(log_messages(drone, messages, topic_filter))
             tasks.add(task)
 
-        # # Messages that doesn't match a filter will get logged here
-        # messages = await stack.enter_async_context(client.unfiltered_messages())
-        # task = asyncio.create_task(log_messages(drone, messages, topic_filter))
-        # tasks.add(task)
+        # Messages that doesn't match a filter will get logged here
+        messages = await stack.enter_async_context(client.unfiltered_messages())
+        task = asyncio.create_task(log_messages(drone, messages, "[unfiltered] {}"))
+        tasks.add(task)
 
         # Subscribe to topic(s)
         # 🤔 Note that we subscribe *after* starting the message
         # loggers. Otherwise, we may miss retained messages.
 
         await client.subscribe("forest/iot/alert")
-        # await client.subscribe("forest/iot/sensors")
+
 
         # Publish a random value to each of these topics
         topics = (
-            "battery",
-            "gps",
-            "inAir",
-            "health",
-            "position",
-            "forest/iot/alert"
+            "drone/sensors",
+            "forest/iot/alert",
+            "forest/drone/release",
             # 👉 Try to add more topics!
         )
 
@@ -84,91 +78,121 @@ async def run():
         await asyncio.gather(*tasks)
 
 async def post_to_topics(client, topics, drone):
-    global isForestOnFire
-    isForestOnFire = False
+    # global isForestOnFire
+    # isForestOnFire = False
+    droneDict = {}
     while True:        
         for topic in topics:
-            if topic == "battery":
+            if topic == "drone/sensors":
+                async for state in drone.core.connection_state():
+                    droneDict['drone'] = str(state.is_connected)
+                    print(f'[topic = "{topic}" -> drone] Publishing message = {str(state.is_connected)}')
+                    break
                 async for battery in drone.telemetry.battery():
-                    droneBattery= {
-                        "battery_info": str(battery.remaining_percent),
-                        "battery_id": str(battery.id),
-                        "battery_voltage_v": str(battery.voltage_v)
-                    }
-                    droneBatteryJSON= json.dumps(droneBattery)
-                    print(f'[topic="{topic}"] Publishing message={str(battery.remaining_percent)} and {str(battery.id)} and {str(battery.voltage_v)}')
+                    droneDict['battery_info'] = str(battery.remaining_percent)
+                    droneDict['battery_id'] = str(battery.id)
+                    droneDict['battery_voltage_v'] = str(battery.voltage_v)
+                    print(f'[topic = "{topic}" -> battery] Publishing message = {str(battery.remaining_percent)} | {str(battery.id)} | {str(battery.voltage_v)}')
                     break
-                await client.publish(topic, droneBatteryJSON, qos=1)
-            elif topic == "gps":
                 async for gps in drone.telemetry.gps_info():
-                    droneGPS= {
-                        "gps_info": str(gps.num_satellites),
-                        "fix_type": str(gps.fix_type),
-                    }
-                    droneGPSJSON= json.dumps(droneGPS)
-                    print(f'[topic="{topic}"] Publishing message={str(gps.num_satellites)} and {str(gps.fix_type)}')
+                    droneDict['gps_info'] = str(gps.num_satellites)
+                    droneDict['fix_type'] = str(gps.fix_type)
+                    print(f'[topic = "{topic}" -> gps] Publishing message = {str(gps.num_satellites)} | {str(gps.fix_type)}')
                     break
-                await client.publish(topic, droneGPSJSON, qos=1)
-            elif topic == "inAir":
                 async for inAir in drone.telemetry.in_air():
-                    inAir_info = str(inAir)
-                    print(f'[topic="{topic}"] Publishing message={inAir_info}')
+                    droneDict['inAir'] = str(inAir)
+                    print(f'[topic = "{topic}" -> inAir] Publishing message = {inAir}')
                     break
-                await client.publish(topic, inAir_info, qos=1)
-            elif topic == "position":
                 async for position in drone.telemetry.position():
-                    dronePosition= {
-                        "position_latitude": str(position.latitude_deg),
-                        "position_longitude": str(position.longitude_deg),
-                        "position_absolute_alt": str(position.absolute_altitude_m),
-                        "position_relative_alt": str(position.relative_altitude_m)
-                    }
-                    dronePositionJSON= json.dumps(dronePosition)
-                    print(f'[topic="{topic}"] Publishing message={str(position.latitude_deg)} and {str(position.longitude_deg)} \
-                        and {str(position.absolute_altitude_m)} and {str(position.relative_altitude_m)}')
+                    droneDict['position_latitude'] = str(position.latitude_deg)
+                    droneDict['position_longitude'] = str(position.longitude_deg)
+                    droneDict['position_absolute_alt'] = str(position.absolute_altitude_m)
+                    droneDict['position_relative_alt'] = str(position.relative_altitude_m)
+                    print(f'[topic = "{topic}" -> position] Publishing message = {str(position.latitude_deg)} | {str(position.longitude_deg)} | {str(position.absolute_altitude_m)} | {str(position.relative_altitude_m)}')
                     break
-                await client.publish(topic, dronePositionJSON, qos=1)
-            elif topic == "health":
                 async for health in drone.telemetry.health():
-                    droneHealth= {
-                        "health_gc": str(health.is_gyrometer_calibration_ok),
-                        "health_ac": str(health.is_accelerometer_calibration_ok),
-                        "health_mc": str(health.is_magnetometer_calibration_ok),
-                        "health_lp": str(health.is_local_position_ok),
-                        "health_gp": str(health.is_global_position_ok),
-                        "health_hp": str(health.is_home_position_ok),
-                        "health_ia": str(health.is_armable)
-                    }
-                    droneHealthJSON= json.dumps(droneHealth)
-                    print(f'[topic="{topic}"] Publishing message={str(health.is_gyrometer_calibration_ok)} and {str(health.is_accelerometer_calibration_ok)} and {str(health.is_magnetometer_calibration_ok)} and {str(health.is_local_position_ok)} and {str(health.is_global_position_ok)} and {str(health.is_home_position_ok)} and {str(health.is_armable)}')
+                    droneDict['health_gc'] = str(health.is_gyrometer_calibration_ok)
+                    droneDict['health_ac'] = str(health.is_accelerometer_calibration_ok)
+                    droneDict['health_mc'] = str(health.is_magnetometer_calibration_ok)
+                    droneDict['health_lp'] = str(health.is_local_position_ok)
+                    droneDict['health_gp'] = str(health.is_global_position_ok)
+                    droneDict['health_hp'] = str(health.is_home_position_ok)
+                    droneDict['health_ia'] = str(health.is_armable)
+                    print(f'[topic = "{topic}" -> health] Publishing message = {str(health.is_gyrometer_calibration_ok)} | {str(health.is_accelerometer_calibration_ok)} | {str(health.is_magnetometer_calibration_ok)} | {str(health.is_local_position_ok)} | {str(health.is_global_position_ok)} | {str(health.is_home_position_ok)} | {str(health.is_armable)}')                    
                     break
-                await client.publish(topic, droneHealthJSON, qos=1)
-            elif (topic == "forest/iot/alert" and isForestOnFire == True) :
-                isMissionDone = await drone.mission.is_mission_finished()
-                if isMissionDone:
-                    message= {"sensor": "FIRE_OFF", "position": [47.397606,8.54306]}
-                    messageJson= json.dumps(message)
-                    print(f'[topic="{topic}"] Publishing message= FIRE_OFF')
-                    await client.publish(topic, messageJson, qos=1)
-                    isForestOnFire = False
+                droneJSON= json.dumps(droneDict)
+                await client.publish(topic, droneJSON, qos=1)
+            # elif (topic == "forest/iot/alert" and isForestOnFire == True) :
+            #     isMissionDone = await drone.mission.is_mission_finished()
+            #     if isMissionDone:
+            #         message = {"sensor": "FIRE_OFF", "position": [47.397606,8.54306]}
+            #         messageJson= json.dumps(message)
+            #         print(f'[topic = "{topic}"] Publishing message = FIRE_OFF')
+            #         await client.publish(topic, messageJson, qos=1)
+            #         isForestOnFire = False
 
             # await asyncio.sleep(1)
 
 async def log_messages(drone, messages, topic_filter):
     async for message in messages:
+        print(f'[topic="{topic_filter}"] {message.payload.decode()}')
         try:
             messageJson = json.loads(message.payload.decode())
-            if messageJson["sensor"] == "FIRE_ON" and topic_filter == "forest/iot/alert":
-                global isForestOnFire
-                isForestOnFire = True
+            if (messageJson["sensor"] == "FIRE_ON" and topic_filter == "forest/iot/alert"):
+                print(f'[topic="{topic_filter}"] Publishing message = FIRE_ON')
                 latitude = messageJson["position"][0]
                 longitude = messageJson["position"][1]
-                await droneGoTo.droneGoTo(drone, latitude, longitude)
-            print(f'[topic="{topic_filter}"] Publishing message= FIRE_ON')
+                await goto(drone, latitude, longitude)
         except:
-            continue
+             continue
         # 🤔 Note that we assume that the message paylod is an
         # UTF8-encoded string (hence the `bytes.decode` call).
+
+async def goto(drone, latitude, longitude):
+
+    drone_mission_progress_task = asyncio.ensure_future(drone_mission_progress(drone))
+
+    mission_items = []
+    mission_items.append(MissionItem(latitude,
+                                     longitude,
+                                     25,
+                                     10,
+                                     True,
+                                     float('nan'),
+                                     float('nan'),
+                                     MissionItem.CameraAction.NONE,
+                                     float('nan'),
+                                     float('nan'),
+                                     float('nan'),
+                                     float('nan'),
+                                     float('nan')))
+
+    mission_plan = MissionPlan(mission_items)
+
+    await drone.mission.set_return_to_launch_after_mission(True)
+
+    print("-- Uploading mission")
+    await drone.mission.upload_mission(mission_plan)
+
+    print("-- Arming")
+    await drone.action.arm()
+
+    print("-- Starting mission")
+    await drone.mission.start_mission()
+
+    await drone_mission_progress_task
+
+
+async def drone_mission_progress(drone):
+    async for mission_progress in drone.mission.mission_progress():
+        if mission_progress.current == 1:
+            print(f"[Mission progress: " f"{mission_progress.current}/" f"{mission_progress.total}]")
+            message = {"sensor":"FIRE_BALL_RELEASED","position":[47.397606,8.54306]}
+            messageJson= json.dumps(message)
+            print(f'[topic = "forest/drone/release"] Publishing message = Fire Ball relesed!')
+            async with Client(hostname = mqttHostname, port = mqttPort,username = mqttUsername, password = mqttPassword) as client:
+                await client.publish("forest/drone/release", messageJson, qos=1)
+                break
 
 async def cancel_tasks(tasks):
     for task in tasks:
@@ -183,6 +207,7 @@ async def cancel_tasks(tasks):
 async def main():
     # Run the main indefinitely. Reconnect automatically
     # if the connection is lost.
+
     reconnect_interval = 1  # [seconds]
     while True:
         try:
@@ -191,6 +216,16 @@ async def main():
             print(f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
         finally:
             await asyncio.sleep(reconnect_interval)
+
+try:
+    mqtt_fp = open('mqtt_config.json')
+    mqtt_config = json.load(mqtt_fp)
+    mqttHostname  = mqtt_config['ip']
+    mqttPort = mqtt_config['port']
+    mqttUsername = mqtt_config['username']
+    mqttPassword = mqtt_config['password']
+except FileNotFoundError:
+    print("MQTT configuration file not fourd.")
 
 asyncio.run(main())
 

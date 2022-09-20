@@ -1,0 +1,34 @@
+metadata:
+  name: foresthandler
+  labels:
+    nuclio.io/project-name: ad88c3d7-3b6a-441f-a552-8eae1f689765
+spec:
+  handler: "main:handler"
+  runtime: nodejs
+  resources: {}
+  image: "nuclio/processor-foresthandler:latest"
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPU: 75
+  triggers:
+    fireTrigger:
+      class: ""
+      kind: mqtt
+      url: "192.168.1.184:1883"
+      username: guest
+      password: guest
+      attributes:
+        subscriptions:
+          - qos: 0
+            topic: forest/iot/sensors
+  version: 1
+  build:
+    functionSourceCode: Y29uc3QgbXF0dCA9IHJlcXVpcmUoJ21xdHQnKQ0KY29uc3QgZm9yZXN0ID0gImZvcmVzdC9pb3QvYWxlcnQiDQpjb25zdCB1cmwgPSAnbXF0dDovLzE5Mi4xNjguMS4xODQnDQpjb25zdCBldmVudF9rZXkgPSAiampOT2hxSjFfZmdKOUZWM0tFX0c0Vy11QjlyQmV0Q1N0UUhvSWhrTHVoUyINCg0KDQpjb25zdCBvcHRpb25zID0gew0KICAgIHBvcnQ6IDE4ODMsDQogICAgaG9zdDogdXJsLA0KICAgIGNsaWVudElkOiAnZm9yZXN0XycgKyBNYXRoLnJhbmRvbSgpLnRvU3RyaW5nKDE2KS5zdWJzdHIoMiwgOCksDQogICAgdXNlcm5hbWU6ICdndWVzdCcsDQogICAgcGFzc3dvcmQ6ICdndWVzdCcsDQp9Ow0KDQpmdW5jdGlvbiBzZW5kRmVlZGJhY2tNcXR0KHEsbXNnKXsNCiAgICBjb25zdCBjbGllbnQgPSBtcXR0LmNvbm5lY3QodXJsLCBvcHRpb25zKTsNCiAgICBjbGllbnQub24oJ2Nvbm5lY3QnLCBmdW5jdGlvbigpIHsNCiAgICAgICAgY2xpZW50LnB1Ymxpc2gocSwgbXNnLHtxb3M6Mn0sZnVuY3Rpb24oKXsNCiAgICAgICAgICAgIGNsaWVudC5lbmQoKTsNCiAgICAgICAgfSk7ICAgICAgICAgICAgIA0KICAgIH0pOyAgICAgICAgDQp9DQoNCmV4cG9ydHMuaGFuZGxlciA9IGZ1bmN0aW9uKGNvbnRleHQsIGV2ZW50KSB7DQogICAgdmFyIGZvcmVzdEpzb24gPSBKU09OLnBhcnNlKGV2ZW50LmJvZHkpOw0KICAgIA0KICAgIGlmIChmb3Jlc3RKc29uLnNlbnNvciA9PSAiRklSRV9PTiIpIHsNCiAgICAgICAgLy8gcmVzdC5wb3N0KCdodHRwczovL21ha2VyLmlmdHR0LmNvbS90cmlnZ2VyL2ZpcmVfbm90aWZpY2F0aW9uL3dpdGgva2V5LycgKyBldmVudF9rZXksIHt2YWx1ZTE6IG9iai5zZW5zb3IsIHZhbHVlMjogb2JqLnBvc2l0aW9uWzBdLCB2YWx1ZTM6IG9iai5wb3NpdGlvblsxXX0pOw0KICAgICAgICBzZW5kRmVlZGJhY2tNcXR0KGZvcmVzdCwgZXZlbnQuYm9keSk7DQogICAgfQ0KDQogICAgY29udGV4dC5jYWxsYmFjaygiIik7DQoNCn07
+    commands:
+      - 'npm install mqtt'
+      - 'npm install restler'
+    runtimeAttributes:
+      repositories: []
+    codeEntryType: sourceCode
+  platform: {}
+  readinessTimeoutSeconds: 60

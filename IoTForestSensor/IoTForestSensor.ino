@@ -8,8 +8,8 @@
 #define LED 12
 const int flameSensor = 5;
 // Replace the next variables with your SSID/Password combination
-const char* ssid = "WiFi_B731BB";
-const char* password = "4c8arlhp";
+const char* ssid = "*****";
+const char* password = "*****";
 
 // Add your MQTT Broker IP address, example:
 const char* mqtt_server = "192.168.1.184";
