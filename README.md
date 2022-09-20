@@ -1,7 +1,7 @@
 # **Forest Fire Detection**
 
 <p align="center">
-<img src="Image/drone.png" alt="logo" width="200" align="middle"/>
+<img src="Images/drone.png" alt="logo" width="200" align="middle"/>
 </p>
 
 ## Summary
@@ -15,12 +15,12 @@
 
 This is a project for the exam of **Serverless Computing for IoT**.<br>
 
-Forest fire is one of the world's biggest calamities that produce significant damage to the atmosphere and also the injunction of danger environment. Internet of things and drone technology are fested booming sectors, that evolves rapidly. This advanced technology can prevent such kind of incident and also making fast decision without the intervention of the humans.The proposed service oriented architecture involves a series of communication between devices and distribute in real-time all the data to the Ground Station. The adoption of all this intelligent devices, with communication capability enable a new concept called "**_Internet of Forest Things_**".
+Forest fire is one of the world's biggest calamities that produce significant damage to the atmosphere and also the injunction of danger environment. Internet of things and drone technology are fested booming sectors, that evolves rapidly. This advanced technology can prevent such kind of incident and also making fast decision without the intervention of the humans.The proposed service oriented architecture involves a series of communication between devices and distribute in real-time all the data to the Ground Station. The adoption of all this intelligent devices, with communication capability enable a new concept called `**_Internet of Forest Things_**`.
 The proposed methodology implements sensors which are installed on the tree that detects the presents of fire and immediately sents the right coordinate to the Unmanned Air Vehicles (UAVs). The UAV immediately takeoff and fly over the forest, reached the fire spot, the UAV releases the fire balls extinguisher and than return to the home base and land.
 
 ## Architecture
 
-![Architecture](Image/architecture.png)
+![Architecture](Images/architecture.png)
 
 From the architecture, in the block "Iot Forest Sensors" we have three types of sending fire alarm, on the top we have the HW prototype made with an ESP32 microcontroller properly connected to a flame detector sensor, led/buzeer and an LCD screen. Initially to speed up development, the flame alarm was simulated by two different nodes, one through a **sendfirealarm** function created through the Nuclio Framework and the other through the Node-RED framework. Both simulated and real sensors use the MQTT protocol to publish their status.
 When the sensor detects a flame sends a notification in the RabbitMQ queue `forest/iot/fire`, the **foresthandler** function through a trigger reads all messages sent on the previous topic and when the flame alert condition occurs, the function publish an alert message on the topic `forest/iot/alert`, then two events arise:
@@ -71,7 +71,7 @@ Install Docker following Docker installation guide [Get Docker](https://docs.doc
 
 ### IFTTT
 
-Register on [IFTTT](https://ifttt.com) and [create a new applet](https://ifttt.com/create) by adding on IF clause `WebHooks service > Receive a web request` with the following parameter:
+Register on [IFTTT](https://ifttt.com) and [create a new applet](https://ifttt.com/create) by adding on IF clause `WebHooks service` > `Receive a web request` with the following parameter:
 
 ![IF Clause](Images/webhook.png)
 
@@ -79,7 +79,7 @@ and with a `THEN clause Telegram > Send Message` with the following parameters:
 
 ![Then](Images/telegram.png)
 
-Once done, by going into `My Applets > "Fire Notification Applets" > WebHook icon > Documentation` and copy the **_ifttt_event_key_**. That key need to be saved and used in the [Nuclio Forest function](Function/foresthandler.js) and [Nuclio Drone function](Function/dronehandler.js)
+Once done, by going into `My Applets` > `Fire Notification Applets` > `WebHook` > `Documentation` and copy the **_ifttt_event_key_**. That key need to be saved and used in the [Nuclio Forest function](Function/foresthandler.js) and [Nuclio Drone function](Function/dronehandler.js)
 
 ### Nuclio
 
@@ -89,16 +89,14 @@ Start [Nuclio](https://github.com/nuclio/nuclio) using a docker container.
 $ docker run -p 8070:8070 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp nuclio/dashboard:stable-amd64
 ```
 
-Browse to http://localhost:8070.
-
 **Update and deploy Functions**:
 
-- Type '**localhost:8070/**' on your browser to open the homepage of Nuclio;
-- Create new project and call it '**Forest Fire Detection**';
-- Press '**Create function**', '**Import**' and upload the **.yaml** function that are in the `Function` folder;
+- Browse to http://localhost:8070 to open the homepage of Nuclio;
+- Create new project and call it **Forest Fire Detection**;
+- Press `Create function`, `Import` and upload the **.yaml** function that are in the `Function` folder;
 - Change the **_ip, port, username and password_** according with your MQTT broker also update the **_ifttt_event_key_** generated from IFTTT;
-- On '**Trigger**' tab also change the '**_ip, port, username and password_**' according with your MQTT Broker;
-- Press '**Deploy**'.
+- On `Trigger` tab also change the **_ip, port, username and password_** according with your MQTT Broker;
+- Press `Deploy`.
 
 ### RabbitMQ
 
@@ -120,7 +118,7 @@ $ docker run --rm -it jonasvautherin/px4-gazebo-headless:1.13.0
 
 ### MAVSDK Python
 
-Is a Python wrapper for MAVSDK. MAVSDK is a set of libraries providing a high-level API to MAVLink. It allow to write programs and to control a MAVLink-enabled drone.
+Is a Python wrapper for MAVSDK. MAVSDK is a set of libraries providing a high-level API to MAVLink, it allow to write programs and to control a MAVLink-enabled drone.
 
 #### Parameters
 
@@ -145,30 +143,28 @@ Start [Node-RED](https://nodered.org/docs/getting-started/docker) instance using
 $ docker run -it -p 1880:1880 -v node_red_data:/data --name mynodered nodered/node-red
 ```
 
-Browse to http://localhost:8070.
-
 **Installation and Configuration**:
 
-- Type '**localhost:1880/**' on your browser to open the homepage of Node-RED;
+- Browse to http://localhost:8070 to open the homepage of Node-RED;
 - '**Import**' the ([flow.json])(Node-RED/flow.json);
-- Press '**Manage palette**' and from the tab '**Install**' search for the following palette:
+- Press `Manage palette` and from `Install` tab, search for the following palette:
   - node-red-dashboard;
   - node-red-contrib-web-worldmap;
   - node-red-contrib-ui-led;
   - node-red-contrib-mqtt-broker;
-- Press on one of the **mqtt nodes**, edit **mqtt-broker node** and change according with your MQTT Broker, **_Server_** and **\_Port** in '**Connection**" and **_User_** and **_Password_** in '**Security**';
+- Press on one of the **mqtt nodes**, edit **mqtt-broker node** and change according with your MQTT Broker, **_Server_** and **\_Port** in `Connection` and **_User_** and **_Password_** in `Security`;
 
 ### Forest IoT Sensor
 
-![Flame Detector](Image/flameDetector.png)
+![Flame Detector](Images/flameDetector.png)
 
 Connect all the components according with [ESP32_Connections.fzz])(IoTForestSensor/ESP32_Connections.fzz);
 
 **Installation and Configuration**:
 
-- Start '**Arduino IDE**' and '**Open**' [IoTForestSensor.ino])(IoT_Forest_Sensor/IoTForestSensor.ino);
+- Start `Arduino IDE` and `Open` [IoTForestSensor.ino])(IoT_Forest_Sensor/IoTForestSensor.ino);
 - Configure **_mqtt_server_** and **_mqtt_port_** according with your MQTT Broker and set **_ssid_** and **_password_**;
-- Press and select the right board: **Tools** > **Board** > **ESP32 Arduino** > **DOIT ESP32 DEVKIT V1**
-- Uodate the '**Upload Speed**' to 115200 and '**Port**' with the correct one;
-- '**Verify**' and '**Upload**' the Sketch on the ESP32 MCU board.
+- Press and select the right board: `Tools` > `Board` > `ESP32 Arduino` > `DOIT ESP32 DEVKIT V1`
+- Uodate the `Upload Speed` to 115200 and `Port` with the correct one;
+- `Verify` and `Upload` the Sketch on the ESP32 MCU board.
 - Open the `Serial monitor` and check if connected.
