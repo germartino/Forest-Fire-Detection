@@ -1,22 +1,13 @@
-# from ast import Global
 import asyncio
 from contextlib import AsyncExitStack, asynccontextmanager
-# from email import message
-# from http import client
-# from random import randrange
-# from turtle import clear
 from asyncio_mqtt import Client, MqttError
 from mavsdk import System
-# from mavsdk import mission
 from mavsdk.mission import (MissionItem, MissionPlan)
-# from mavsdk.offboard import (OffboardError, VelocityBodyYawspeed)
 import json
 
 async def run():
-
     drone = System()
     await drone.connect(system_address="udp://:14540")
-
     print("Waiting for drone to connect...")
     async for state in drone.core.connection_state():
         if state.is_connected:
@@ -49,7 +40,6 @@ async def run():
             messages = await stack.enter_async_context(manager)
             task = asyncio.create_task(log_messages(drone, messages, topic_filter))
             tasks.add(task)
-
         # Messages that doesn't match a filter will get logged here
         messages = await stack.enter_async_context(client.unfiltered_messages())
         task = asyncio.create_task(log_messages(drone, messages, "[unfiltered] {}"))
@@ -58,18 +48,15 @@ async def run():
         # Subscribe to topic(s)
         # 🤔 Note that we subscribe *after* starting the message
         # loggers. Otherwise, we may miss retained messages.
-
         await client.subscribe("forest/iot/alert")
-
 
         # Publish a random value to each of these topics
         topics = (
             "drone/sensors",
             "forest/iot/alert",
-            "forest/drone/release",
+            "drone/payload",
             # 👉 Try to add more topics!
         )
-
         task = asyncio.create_task(post_to_topics(client, topics, drone))
         tasks.add(task)
 
@@ -78,8 +65,6 @@ async def run():
         await asyncio.gather(*tasks)
 
 async def post_to_topics(client, topics, drone):
-    # global isForestOnFire
-    # isForestOnFire = False
     droneDict = {}
     while True:        
         for topic in topics:
@@ -122,16 +107,6 @@ async def post_to_topics(client, topics, drone):
                     break
                 droneJSON= json.dumps(droneDict)
                 await client.publish(topic, droneJSON, qos=1)
-            # elif (topic == "forest/iot/alert" and isForestOnFire == True) :
-            #     isMissionDone = await drone.mission.is_mission_finished()
-            #     if isMissionDone:
-            #         message = {"sensor": "FIRE_OFF", "position": [47.397606,8.54306]}
-            #         messageJson= json.dumps(message)
-            #         print(f'[topic = "{topic}"] Publishing message = FIRE_OFF')
-            #         await client.publish(topic, messageJson, qos=1)
-            #         isForestOnFire = False
-
-            # await asyncio.sleep(1)
 
 async def log_messages(drone, messages, topic_filter):
     async for message in messages:
@@ -151,7 +126,6 @@ async def log_messages(drone, messages, topic_filter):
 async def goto(drone, latitude, longitude):
 
     drone_mission_progress_task = asyncio.ensure_future(drone_mission_progress(drone))
-
     mission_items = []
     mission_items.append(MissionItem(latitude,
                                      longitude,
@@ -170,18 +144,13 @@ async def goto(drone, latitude, longitude):
     mission_plan = MissionPlan(mission_items)
 
     await drone.mission.set_return_to_launch_after_mission(True)
-
     print("-- Uploading mission")
     await drone.mission.upload_mission(mission_plan)
-
     print("-- Arming")
     await drone.action.arm()
-
     print("-- Starting mission")
     await drone.mission.start_mission()
-
     await drone_mission_progress_task
-
 
 async def drone_mission_progress(drone):
     async for mission_progress in drone.mission.mission_progress():
@@ -189,9 +158,9 @@ async def drone_mission_progress(drone):
             print(f"[Mission progress: " f"{mission_progress.current}/" f"{mission_progress.total}]")
             message = {"sensor":"FIRE_BALL_RELEASED","position":[47.397606,8.54306]}
             messageJson= json.dumps(message)
-            print(f'[topic = "forest/drone/release"] Publishing message = Fire Ball relesed!')
+            print(f'[topic = "drone/payload"] Publishing message = Fire Ball released!')
             async with Client(hostname = mqttHostname, port = mqttPort,username = mqttUsername, password = mqttPassword) as client:
-                await client.publish("forest/drone/release", messageJson, qos=1)
+                await client.publish("drone/payload", messageJson, qos=1)
                 break
 
 async def cancel_tasks(tasks):
@@ -216,7 +185,6 @@ async def main():
             print(f'Error "{error}". Reconnecting in {reconnect_interval} seconds.')
         finally:
             await asyncio.sleep(reconnect_interval)
-
 try:
     mqtt_fp = open('mqtt_config.json')
     mqtt_config = json.load(mqtt_fp)

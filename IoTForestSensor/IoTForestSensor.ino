@@ -104,7 +104,6 @@ void reconnect() {
       Serial.println("connected");
       // Subscribe
       client.subscribe("forest/iot/alert");
-      client.subscribe("forest/iot/sensors");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -147,7 +146,7 @@ void loop() {
       // Generate the minified JSON and send it to the Serial port.
 //      char out[128];
       serializeJson(forest, out);
-      client.publish("forest/iot/sensors", out);
+      client.publish("forest/iot/fire", out);
     }
     memset(out, 0, sizeof(out));
 
