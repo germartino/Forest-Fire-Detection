@@ -1,0 +1,34 @@
+metadata:
+  name: dronehandler
+  labels:
+    nuclio.io/project-name: ad88c3d7-3b6a-441f-a552-8eae1f689765
+spec:
+  handler: "main:handler"
+  runtime: nodejs
+  resources: {}
+  image: "nuclio/processor-dronehandler:latest"
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPU: 75
+  triggers:
+    droneTrigger:
+      class: ""
+      kind: mqtt
+      url: "192.168.1.184:1883"
+      username: guest
+      password: guest
+      attributes:
+        subscriptions:
+          - qos: 0
+            topic: drone/payload
+  version: 1
+  build:
+    functionSourceCode: Y29uc3QgbXF0dCA9IHJlcXVpcmUoJ21xdHQnKQ0KY29uc3QgcmVzdCA9IHJlcXVpcmUoJ3Jlc3RsZXInKQ0KY29uc3QgaWZ0dHRfZXZlbnRfa2V5ID0gImpqTk9ocUoxX2ZnSjlGVjNLRV9HNFctdUI5ckJldENTdFFIb0loa0x1aFMiDQpjb25zdCBkcm9uZSA9ICJmb3Jlc3QvaW90L2FsZXJ0Ig0KY29uc3QgdXJsID0gJ21xdHQ6Ly8xOTIuMTY4LjEuMTg0Jw0KDQpjb25zdCBvcHRpb25zID0gew0KICAgIHBvcnQ6IDE4ODMsDQogICAgaG9zdDogdXJsLA0KICAgIGNsaWVudElkOiAnZHJvbmVfJyArIE1hdGgucmFuZG9tKCkudG9TdHJpbmcoMTYpLnN1YnN0cigyLCA4KSwNCiAgICB1c2VybmFtZTogJ2d1ZXN0JywNCiAgICBwYXNzd29yZDogJ2d1ZXN0JywNCn07DQoNCmZ1bmN0aW9uIHNlbmRGZWVkYmFja01xdHQocSxtc2cpew0KICAgIGNvbnN0IGNsaWVudCA9IG1xdHQuY29ubmVjdCh1cmwsIG9wdGlvbnMpOw0KICAgIGNsaWVudC5vbignY29ubmVjdCcsIGZ1bmN0aW9uKCkgew0KICAgICAgICBjbGllbnQucHVibGlzaChxLCBtc2cse3FvczoyfSxmdW5jdGlvbigpew0KICAgICAgICAgICAgY2xpZW50LmVuZCgpOw0KICAgICAgICB9KTsgICAgICAgICAgICAgDQogICAgfSk7ICAgICAgICANCn0NCg0KZXhwb3J0cy5oYW5kbGVyID0gZnVuY3Rpb24oY29udGV4dCwgZXZlbnQpIHsNCiAgICB2YXIgb2JqID0gSlNPTi5wYXJzZShldmVudC5ib2R5KTsNCiAgICAgDQogICAgaWYgKG9iai5zZW5zb3IgPT0gIkZJUkVfQkFMTF9SRUxFQVNFRCIpIHsNCiAgICAgICAgb2JqLnNlbnNvciA9ICJGSVJFX09GRiI7DQogICAgICAgIGRyb25lU3RyID0gSlNPTi5zdHJpbmdpZnkob2JqKTsNCiAgICAgICAgDQogICAgICAgIHNlbmRGZWVkYmFja01xdHQoZHJvbmUsIGRyb25lU3RyKTsNCiAgICAgICAgcmVzdC5wb3N0KCdodHRwczovL21ha2VyLmlmdHR0LmNvbS90cmlnZ2VyL2ZpcmVfbm90aWZpY2F0aW9uL3dpdGgva2V5LycgKyBpZnR0dF9ldmVudF9rZXksIHtkYXRhOiB7dmFsdWUxOiBvYmouc2Vuc29yLCB2YWx1ZTI6IG9iai5wb3NpdGlvblswXSwgdmFsdWUzOiBvYmoucG9zaXRpb25bMV19fSkub24oJ2NvbXBsZXRlJywgZnVuY3Rpb24oZGF0YSl7DQoJCQljb25zb2xlLmxvZygiRm9yZXN0IHN0YXR1czogIiArIG9iai5zZW5zb3JzICsgIkxhdGl0dWRlOiAiICsgb2JqLnBvc2l0aW9uWzBdICsgIkxvbmdpdHVkZTogIiArIG9iai5wb3NpdGlvblsxXSk7DQoJCX0pOw0KICAgIH0NCiAgICBjb250ZXh0LmNhbGxiYWNrKCIiKTsNCn07
+    commands:
+      - 'npm install mqtt'
+      - 'npm install restler'
+    runtimeAttributes:
+      repositories: []
+    codeEntryType: sourceCode
+  platform: {}
+  readinessTimeoutSeconds: 60
