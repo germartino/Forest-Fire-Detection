@@ -147,7 +147,7 @@ $ docker run -it -p 1880:1880 -v node_red_data:/data --name mynodered nodered/no
 
 **Installation and Configuration**:
 
-- Browse to http://localhost:8070 to open the homepage of Node-RED;
+- Browse to http://localhost:1880 to open the homepage of Node-RED;
 - '**Import**' the ([flow.json])(Node-RED/flow.json);
 - Press `Manage palette` and from `Install` tab, search for the following palette:
   - node-red-dashboard;
